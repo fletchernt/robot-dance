@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "import:github": "node scripts/import_github_lists.js",
+    "import:invertedstone": "node scripts/import_invertedstone.js"
   },
   "dependencies": {
     "@types/node": "^25.0.6",

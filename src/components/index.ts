@@ -11,3 +11,5 @@ export { AffiliateCTA } from './AffiliateCTA';
 export { HelpfulVote } from './HelpfulVote';
 export { TrustedReviewerBadge } from './TrustedReviewerBadge';
 export { TrustRating } from './TrustRating';
+export { Pagination } from './Pagination';
+export { SortDropdown } from './SortDropdown';

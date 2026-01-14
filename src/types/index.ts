@@ -129,10 +129,20 @@ export interface SolutionWithReviews extends Solution {
 
 // Search/filter params
 export interface SolutionFilters {
+  page?: number;
+  limit?: number;
   category?: SolutionCategory;
   search?: string;
   sort?: 'rds_score' | 'review_count' | 'created_at';
   order?: 'asc' | 'desc';
+}
+// Paginated result wrapper
+export interface PaginatedResult<T> {
+  data: T[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
 }
 
 // Session user with referral info
@@ -142,4 +152,30 @@ export interface SessionUser {
   email: string;
   image?: string;
   referral_code: string;
+}
+
+// Tool submission status
+export type SubmissionStatus = 'pending' | 'approved' | 'rejected';
+
+// Tool submission from Airtable
+export interface Submission {
+  id: string;
+  name: string;
+  website_url: string;
+  description: string;
+  category: SolutionCategory;
+  submitter_email: string;
+  submitter_name?: string;
+  status: SubmissionStatus;
+  created_at: string;
+}
+
+// Form data for submitting a tool
+export interface SubmitToolFormData {
+  name: string;
+  website_url: string;
+  description: string;
+  category: SolutionCategory;
+  submitter_email: string;
+  submitter_name?: string;
 }

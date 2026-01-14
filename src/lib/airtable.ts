@@ -1,5 +1,5 @@
 import Airtable from 'airtable';
-import type { Solution, Review, User, SolutionFilters, ReviewFormData } from '@/types';
+import type { Solution, Review, User, SolutionFilters, ReviewFormData, Submission, SubmitToolFormData, PaginatedResult } from '@/types';
 import { calculateRDS, calculateAverageRatings } from './rds';
 
 // Lazy initialization to avoid build-time errors
@@ -374,4 +374,106 @@ export async function getUserRatedReviewIds(raterId: string): Promise<string[]> 
   } catch {
     return [];
   }
+}
+
+// ============ SUBMISSIONS ============
+
+function getSubmissionsTable() {
+  return getBase()('Submissions');
+}
+
+// Helper to convert Airtable record to Submission
+function recordToSubmission(record: Airtable.Record<Airtable.FieldSet>): Submission {
+  return {
+    id: record.id,
+    name: record.get('name') as string,
+    website_url: record.get('website_url') as string,
+    description: record.get('description') as string,
+    category: record.get('category') as Submission['category'],
+    submitter_email: record.get('submitter_email') as string,
+    submitter_name: record.get('submitter_name') as string | undefined,
+    status: (record.get('status') as Submission['status']) || 'pending',
+    created_at: (record.get('created_at') || record.get('Created') || new Date().toISOString()) as string,
+  };
+}
+
+export async function createSubmission(data: SubmitToolFormData): Promise<Submission> {
+  const record = await getSubmissionsTable().create({
+    name: data.name,
+    website_url: data.website_url,
+    description: data.description,
+    category: data.category,
+    submitter_email: data.submitter_email,
+    submitter_name: data.submitter_name || undefined,
+    status: 'pending',
+  });
+
+  return recordToSubmission(record);
+}
+
+export async function getSubmissionByUrl(url: string): Promise<Submission | null> {
+  try {
+    // Normalize URL for comparison
+    const normalizedUrl = url.replace(/^https?:\/\//, '').replace(/\/$/, '').toLowerCase();
+    
+    const records = await getSubmissionsTable()
+      .select({
+        filterByFormula: `LOWER(SUBSTITUTE(SUBSTITUTE({website_url}, "https://", ""), "http://", "")) = "${normalizedUrl}"`,
+        maxRecords: 1,
+      })
+      .all();
+
+    return records.length > 0 ? recordToSubmission(records[0]) : null;
+  } catch {
+    return null;
+  }
+}
+
+
+// ============ PAGINATED SOLUTIONS ============
+
+export async function getSolutionsPaginated(
+  filters?: SolutionFilters
+): Promise<PaginatedResult<Solution>> {
+  const page = filters?.page || 1;
+  const limit = filters?.limit || 24;
+
+  const filterFormulas: string[] = [];
+
+  if (filters?.category) {
+    filterFormulas.push(`{category} = '${filters.category}'`);
+  }
+
+  if (filters?.search) {
+    filterFormulas.push(`SEARCH(LOWER('${filters.search}'), LOWER({name}))`);
+  }
+
+  const formula = filterFormulas.length > 0
+    ? `AND(${filterFormulas.join(', ')})`
+    : '';
+
+  const sortField = filters?.sort || 'rds_score';
+  const sortDirection = filters?.order === 'asc' ? 'asc' : 'desc';
+
+  const records = await getSolutionsTable()
+    .select({
+      filterByFormula: formula,
+      sort: [{ field: sortField, direction: sortDirection }],
+    })
+    .all();
+
+  const total = records.length;
+  const totalPages = Math.ceil(total / limit);
+  const startIndex = (page - 1) * limit;
+  const endIndex = startIndex + limit;
+
+  const pageRecords = records.slice(startIndex, endIndex);
+
+  return {
+    data: pageRecords.map(recordToSolution),
+    total,
+    page,
+    limit,
+    totalPages,
+  };
 }

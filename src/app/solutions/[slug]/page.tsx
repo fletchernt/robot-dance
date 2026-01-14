@@ -141,7 +141,7 @@ export default async function SolutionDetailPage({ params }: PageProps) {
 
       {/* RDS Breakdown */}
       <div className="bg-white rounded-xl shadow-sm border p-8 mb-8">
-        <h2 className="text-xl font-bold text-gray-900 mb-6">Score Breakdown</h2>
+        <h2 className="text-xl font-bold text-gray-900 mb-6">Robot Dance Score™</h2>
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
           {[
             { key: 'performance', label: 'Performance', weight: '25%' },

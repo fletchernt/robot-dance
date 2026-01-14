@@ -31,6 +31,12 @@ export function Navbar() {
               >
                 Top Rated
               </Link>
+              <Link
+                href="/submit"
+                className="text-primary-600 hover:text-primary-700 px-3 py-2 text-sm font-medium"
+              >
+                + Submit Tool
+              </Link>
             </div>
           </div>
 

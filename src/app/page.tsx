@@ -22,7 +22,7 @@ export default async function HomePage() {
             Discover the Best AI Tools
           </h1>
           <p className="text-xl text-primary-100 mb-8 max-w-2xl mx-auto">
-            Find, compare, and review AI solutions with our unique Robot Dance Score.
+            Find, compare, and review AI solutions with our unique Robot Dance Score™.
             From apps to agents, APIs to robots.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -47,7 +47,7 @@ export default async function HomePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold text-gray-900 mb-4">
-              What is the Robot Dance Score?
+              What is the Robot Dance Score™?
             </h2>
             <p className="text-gray-600 max-w-2xl mx-auto">
               The RDS is a 0-100 score calculated from user reviews across six key categories,

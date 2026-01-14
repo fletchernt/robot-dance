@@ -1,0 +1,40 @@
+{
+  "sources": [
+    {
+      "name": "awesome-generative-ai",
+      "url": "https://raw.githubusercontent.com/steven2358/awesome-generative-ai/master/README.md",
+      "category": "apps"
+    },
+    {
+      "name": "awesome-chatgpt",
+      "url": "https://raw.githubusercontent.com/humanloop/awesome-chatgpt/main/README.md",
+      "category": "apps"
+    },
+    {
+      "name": "awesome-ai-tools",
+      "url": "https://raw.githubusercontent.com/mahseema/awesome-ai-tools/main/README.md",
+      "category": "apps"
+    },
+    {
+      "name": "awesome-llm",
+      "url": "https://raw.githubusercontent.com/Hannibal046/Awesome-LLM/main/README.md",
+      "category": "apis"
+    },
+    {
+      "name": "awesome-ai-agents",
+      "url": "https://raw.githubusercontent.com/e2b-dev/awesome-ai-agents/main/README.md",
+      "category": "agents"
+    },
+    {
+      "name": "awesome-production-machine-learning",
+      "url": "https://raw.githubusercontent.com/EthicalML/awesome-production-machine-learning/master/README.md",
+      "category": "apis"
+    }
+  ],
+  "settings": {
+    "batchSize": 10,
+    "delayBetweenBatches": 1000,
+    "skipGitHubRepoLinks": true,
+    "defaultCategory": "apps"
+  }
+}

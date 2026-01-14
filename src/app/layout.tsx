@@ -9,7 +9,7 @@ const inter = Inter({ subsets: ['latin'] });
 export const metadata: Metadata = {
   title: 'RobotDance - Discover the Best AI Tools',
   description:
-    'Find and compare AI solutions with the Robot Dance Score. Read reviews, discover top-rated AI apps, agents, APIs, and more.',
+    'Find and compare AI solutions with the Robot Dance Score™. Read reviews, discover top-rated AI apps, agents, APIs, and more.',
   keywords: ['AI', 'artificial intelligence', 'AI tools', 'AI reviews', 'AI directory'],
 };
 
