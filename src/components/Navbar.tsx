@@ -67,10 +67,10 @@ export function Navbar() {
               </>
             ) : (
               <button
-                onClick={() => signIn()}
+                onClick={() => signIn('google')}
                 className="bg-primary-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-primary-700"
               >
-                Sign In
+                Sign In with Google
               </button>
             )}
           </div>

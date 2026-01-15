@@ -1,6 +1,5 @@
 import type { NextAuthOptions } from 'next-auth';
 import GoogleProvider from 'next-auth/providers/google';
-import GitHubProvider from 'next-auth/providers/github';
 import { getUserByProviderId, createUser } from './airtable';
 import { generateReferralCode } from './referral';
 
@@ -10,17 +9,13 @@ export const authOptions: NextAuthOptions = {
       clientId: process.env.GOOGLE_CLIENT_ID!,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
     }),
-    GitHubProvider({
-      clientId: process.env.GITHUB_CLIENT_ID!,
-      clientSecret: process.env.GITHUB_CLIENT_SECRET!,
-    }),
   ],
   callbacks: {
     async signIn({ user, account }) {
       try {
         if (!account || !user.email) return false;
 
-        const provider = account.provider as 'google' | 'github';
+        const provider = account.provider as 'google';
         const providerId = account.providerAccountId;
 
         // Check if user exists
@@ -48,7 +43,7 @@ export const authOptions: NextAuthOptions = {
     async jwt({ token, account }) {
       if (account) {
         // Fetch user from Airtable to get their ID and referral code
-        const provider = account.provider as 'google' | 'github';
+        const provider = account.provider as 'google';
         const providerId = account.providerAccountId;
         const user = await getUserByProviderId(provider, providerId);
 
