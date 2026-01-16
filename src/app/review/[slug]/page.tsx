@@ -37,7 +37,12 @@ export default async function ReviewPage({ params }: PageProps) {
         </Link>
       </div>
 
-      <ReviewForm solutionId={solution.id} solutionSlug={slug} solutionName={solution.name} />
+      <ReviewForm
+        solutionId={solution.id}
+        solutionSlug={slug}
+        solutionName={solution.name}
+        currentVersion={solution.current_version}
+      />
     </div>
   );
 }

@@ -23,6 +23,7 @@ export interface Solution {
   rds_score: number;
   review_count: number;
   commission_rate?: number; // Percentage the affiliate program pays (e.g., 0.30 for 30%)
+  current_version?: string; // Current version of the solution (e.g., "GPT-4o", "v2.1")
   created_at: string;
 }
 
@@ -43,6 +44,7 @@ export interface Review extends ReviewRatings {
   user_id: string;
   review_text: string;
   youtube_url?: string;
+  version?: string; // Version of the solution that was reviewed
   created_at: string;
   // Helpful vote stats
   helpful_yes: number;
@@ -105,6 +107,7 @@ export interface ReviewFormData extends ReviewRatings {
   solution_id: string;
   review_text: string;
   youtube_url?: string;
+  version?: string; // Version being reviewed
 }
 
 // API response types

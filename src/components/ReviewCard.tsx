@@ -71,7 +71,14 @@ export function ReviewCard({
               showScore={reviewerRatingCount > 0}
             />
           </div>
-          <p className="text-sm text-gray-500">{formattedDate}</p>
+          <div className="flex items-center gap-2">
+            <p className="text-sm text-gray-500">{formattedDate}</p>
+            {review.version && (
+              <span className="text-xs px-2 py-0.5 bg-gray-100 text-gray-600 rounded">
+                {review.version}
+              </span>
+            )}
+          </div>
         </div>
         <div className="flex items-center space-x-2">
           <span className="text-2xl font-bold text-primary-600">{reviewScore}</span>

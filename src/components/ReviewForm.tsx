@@ -8,6 +8,7 @@ interface ReviewFormProps {
   solutionId: string;
   solutionSlug: string;
   solutionName: string;
+  currentVersion?: string;
 }
 
 function RatingInput({
@@ -47,7 +48,7 @@ function RatingInput({
   );
 }
 
-export function ReviewForm({ solutionId, solutionSlug, solutionName }: ReviewFormProps) {
+export function ReviewForm({ solutionId, solutionSlug, solutionName, currentVersion }: ReviewFormProps) {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -62,6 +63,7 @@ export function ReviewForm({ solutionId, solutionSlug, solutionName }: ReviewFor
     delight: 5,
     review_text: '',
     youtube_url: '',
+    version: currentVersion || '',
   });
 
   const handleRatingChange = (field: keyof ReviewFormData, value: number) => {
@@ -97,9 +99,15 @@ export function ReviewForm({ solutionId, solutionSlug, solutionName }: ReviewFor
 
   return (
     <form onSubmit={handleSubmit} className="max-w-2xl mx-auto">
-      <h2 className="text-2xl font-bold text-gray-900 mb-6">
+      <h2 className="text-2xl font-bold text-gray-900 mb-2">
         Review {solutionName}
       </h2>
+      {currentVersion && (
+        <p className="text-sm text-gray-600 mb-6">
+          Reviewing version: <span className="font-medium text-gray-900">{currentVersion}</span>
+        </p>
+      )}
+      {!currentVersion && <div className="mb-6" />}
 
       {error && (
         <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700">
