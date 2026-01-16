@@ -41,13 +41,20 @@ export function SolutionCard({ solution }: SolutionCardProps) {
             )}
             <div>
               <h3 className="text-lg font-semibold text-gray-900">{solution.name}</h3>
-              <span
-                className={`inline-block px-2 py-0.5 rounded text-xs font-medium ${
-                  categoryColors[solution.category] || 'bg-gray-100 text-gray-800'
-                }`}
-              >
-                {categoryLabels[solution.category] || solution.category}
-              </span>
+              <div className="flex items-center gap-1.5">
+                <span
+                  className={`inline-block px-2 py-0.5 rounded text-xs font-medium ${
+                    categoryColors[solution.category] || 'bg-gray-100 text-gray-800'
+                  }`}
+                >
+                  {categoryLabels[solution.category] || solution.category}
+                </span>
+                {solution.current_version && (
+                  <span className="inline-block px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-700">
+                    {solution.current_version}
+                  </span>
+                )}
+              </div>
             </div>
           </div>
           <RDSBadge score={solution.rds_score} size="sm" />
