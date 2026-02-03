@@ -401,33 +401,57 @@ function recordToSubmission(record: Airtable.Record<Airtable.FieldSet>): Submiss
 }
 
 export async function createSubmission(data: SubmitToolFormData): Promise<Submission> {
-  const record = await getSubmissionsTable().create({
-    name: data.name,
-    website_url: data.website_url,
-    description: data.description,
+  // Build fields object, omitting empty optional fields to avoid Airtable SDK issues
+  const fields: Record<string, string> = {
+    name: data.name.trim(),
+    website_url: data.website_url.trim(),
+    description: data.description.trim(),
     category: data.category,
-    submitter_email: data.submitter_email,
-    submitter_name: data.submitter_name || undefined,
+    submitter_email: data.submitter_email.trim(),
     status: 'pending',
+  };
+
+  if (data.submitter_name && data.submitter_name.trim()) {
+    fields.submitter_name = data.submitter_name.trim();
+  }
+
+  console.log('[Submissions] Creating record with fields:', {
+    name: fields.name,
+    website_url: fields.website_url,
+    category: fields.category,
+    submitter_email: fields.submitter_email,
   });
 
-  return recordToSubmission(record);
+  try {
+    const record = await getSubmissionsTable().create(fields);
+    console.log('[Submissions] Record created successfully:', record.id);
+    return recordToSubmission(record);
+  } catch (error) {
+    console.error('[Submissions] Airtable create failed:', error);
+    throw error;
+  }
 }
 
 export async function getSubmissionByUrl(url: string): Promise<Submission | null> {
   try {
-    // Normalize URL for comparison
-    const normalizedUrl = url.replace(/^https?:\/\//, '').replace(/\/$/, '').toLowerCase();
-    
+    // Normalize URL: strip protocol, trailing slash, lowercase
+    const normalizedUrl = url.replace(/^https?:\/\//, '').replace(/\/+$/, '').toLowerCase();
+    // Escape double quotes in URL to prevent formula injection
+    const safeUrl = normalizedUrl.replace(/"/g, '\\"');
+
+    const formula = `LOWER(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE({website_url}, "https://", ""), "http://", ""), "/", "")) = "${safeUrl.replace(/\//g, '')}"`;
+
     const records = await getSubmissionsTable()
       .select({
-        filterByFormula: `LOWER(SUBSTITUTE(SUBSTITUTE({website_url}, "https://", ""), "http://", "")) = "${normalizedUrl}"`,
+        filterByFormula: formula,
         maxRecords: 1,
       })
       .all();
 
     return records.length > 0 ? recordToSubmission(records[0]) : null;
-  } catch {
+  } catch (error) {
+    console.error('[Submissions] getSubmissionByUrl failed:', error);
+    // Don't block submission on lookup failure - just allow it through
     return null;
   }
 }

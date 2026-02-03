@@ -44,10 +44,15 @@ export function SubmitToolForm() {
         body: JSON.stringify(formData),
       });
 
-      const data = await response.json();
+      let data;
+      try {
+        data = await response.json();
+      } catch {
+        throw new Error(`Server returned ${response.status}: unable to parse response`);
+      }
 
-      if (!data.success) {
-        throw new Error(data.error || 'Failed to submit tool');
+      if (!response.ok || !data.success) {
+        throw new Error(data.error || `Submission failed (${response.status})`);
       }
 
       setIsSuccess(true);
@@ -60,7 +65,9 @@ export function SubmitToolForm() {
         submitter_name: '',
       });
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Something went wrong');
+      const message = err instanceof Error ? err.message : 'Something went wrong';
+      setError(message);
+      console.error('Submission error:', message);
     } finally {
       setIsSubmitting(false);
     }
