@@ -13,6 +13,7 @@ function getResendClient(): Resend | null {
 const FROM_ADDRESS = process.env.RESEND_FROM_EMAIL || 'RobotDance <noreply@robotdance.com>';
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL;
 const AIRTABLE_BASE_ID = process.env.AIRTABLE_BASE_ID;
+const AIRTABLE_SUBMISSIONS_TABLE_ID = process.env.AIRTABLE_SUBMISSIONS_TABLE_ID;
 
 export async function sendSubmissionConfirmation(
   to: string,
@@ -54,8 +55,8 @@ export async function sendAdminSubmissionNotification(
     return false;
   }
 
-  const airtableUrl = AIRTABLE_BASE_ID
-    ? `https://airtable.com/${AIRTABLE_BASE_ID}/tblSubmissions/${submission.id}`
+  const airtableUrl = AIRTABLE_BASE_ID && AIRTABLE_SUBMISSIONS_TABLE_ID
+    ? `https://airtable.com/${AIRTABLE_BASE_ID}/${AIRTABLE_SUBMISSIONS_TABLE_ID}/${submission.id}`
     : null;
 
   const categoryLabels: Record<string, string> = {
