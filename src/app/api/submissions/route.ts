@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createSubmission, getSubmissionByUrl, getSolutionBySlug } from '@/lib/airtable';
-import { sendSubmissionConfirmation } from '@/lib/email';
+import { sendSubmissionConfirmation, sendAdminSubmissionNotification } from '@/lib/email';
 import type { ApiResponse, Submission, SubmitToolFormData } from '@/types';
 
 // Simple slug generation
@@ -102,9 +102,13 @@ export async function POST(request: NextRequest) {
     const submission = await createSubmission(body);
     console.log('[Submissions API] Submission created successfully:', submission.id);
 
-    // Send confirmation email (non-blocking — don't fail the submission if email fails)
+    // Send emails (non-blocking — don't fail the submission if emails fail)
     sendSubmissionConfirmation(body.submitter_email.trim(), body.name.trim()).catch((err) => {
-      console.error('[Submissions API] Email send failed:', err);
+      console.error('[Submissions API] Confirmation email failed:', err);
+    });
+
+    sendAdminSubmissionNotification(submission).catch((err) => {
+      console.error('[Submissions API] Admin notification email failed:', err);
     });
 
     return NextResponse.json<ApiResponse<Submission>>({

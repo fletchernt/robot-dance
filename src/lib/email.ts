@@ -1,4 +1,5 @@
 import { Resend } from 'resend';
+import type { Submission } from '@/types';
 
 function getResendClient(): Resend | null {
   const apiKey = process.env.RESEND_API_KEY;
@@ -10,6 +11,8 @@ function getResendClient(): Resend | null {
 }
 
 const FROM_ADDRESS = process.env.RESEND_FROM_EMAIL || 'RobotDance <noreply@robotdance.com>';
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL;
+const AIRTABLE_BASE_ID = process.env.AIRTABLE_BASE_ID;
 
 export async function sendSubmissionConfirmation(
   to: string,
@@ -36,6 +39,81 @@ export async function sendSubmissionConfirmation(
     return true;
   } catch (error) {
     console.error('[Email] Failed to send confirmation:', error);
+    return false;
+  }
+}
+
+export async function sendAdminSubmissionNotification(
+  submission: Submission
+): Promise<boolean> {
+  const resend = getResendClient();
+  if (!resend) return false;
+
+  if (!ADMIN_EMAIL) {
+    console.warn('[Email] ADMIN_EMAIL not configured — skipping admin notification');
+    return false;
+  }
+
+  const airtableUrl = AIRTABLE_BASE_ID
+    ? `https://airtable.com/${AIRTABLE_BASE_ID}/tblSubmissions/${submission.id}`
+    : null;
+
+  const categoryLabels: Record<string, string> = {
+    apps: 'App',
+    agents: 'Agent',
+    apis: 'API',
+    devices: 'Device',
+    robots: 'Robot',
+  };
+
+  try {
+    await resend.emails.send({
+      from: FROM_ADDRESS,
+      to: ADMIN_EMAIL,
+      subject: `New submission: ${submission.name}`,
+      html: `
+        <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
+          <h2 style="color: #0ea5e9;">New Tool Submission</h2>
+
+          <table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
+            <tr>
+              <td style="padding: 8px 0; color: #666; width: 120px;">Tool Name</td>
+              <td style="padding: 8px 0; font-weight: 600;">${submission.name}</td>
+            </tr>
+            <tr>
+              <td style="padding: 8px 0; color: #666;">Website</td>
+              <td style="padding: 8px 0;"><a href="${submission.website_url}" style="color: #0ea5e9;">${submission.website_url}</a></td>
+            </tr>
+            <tr>
+              <td style="padding: 8px 0; color: #666;">Category</td>
+              <td style="padding: 8px 0;">${categoryLabels[submission.category] || submission.category}</td>
+            </tr>
+            <tr>
+              <td style="padding: 8px 0; color: #666;">Submitter</td>
+              <td style="padding: 8px 0;">${submission.submitter_name || 'Anonymous'} &lt;${submission.submitter_email}&gt;</td>
+            </tr>
+            <tr>
+              <td style="padding: 8px 0; color: #666; vertical-align: top;">Description</td>
+              <td style="padding: 8px 0;">${submission.description}</td>
+            </tr>
+          </table>
+
+          ${airtableUrl ? `
+          <p style="margin-top: 24px;">
+            <a href="${airtableUrl}" style="display: inline-block; background: #0ea5e9; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: 500;">Review in Airtable</a>
+          </p>
+          ` : ''}
+
+          <p style="color: #999; font-size: 12px; margin-top: 32px;">
+            Submitted at ${new Date(submission.created_at).toLocaleString()}
+          </p>
+        </div>
+      `,
+    });
+    console.log('[Email] Admin notification sent for submission:', submission.id);
+    return true;
+  } catch (error) {
+    console.error('[Email] Failed to send admin notification:', error);
     return false;
   }
 }
