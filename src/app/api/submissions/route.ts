@@ -110,14 +110,24 @@ export async function POST(request: NextRequest) {
       sendAdminSubmissionNotification(submission),
     ]);
 
-    console.log('[Submissions API] Email results:', {
-      confirmation: confirmationResult.status === 'fulfilled' ? confirmationResult.value : confirmationResult.reason,
-      admin: adminResult.status === 'fulfilled' ? adminResult.value : adminResult.reason,
-    });
+    const emailStatus = {
+      confirmation: confirmationResult.status === 'fulfilled' ? confirmationResult.value : `error: ${confirmationResult.reason}`,
+      admin: adminResult.status === 'fulfilled' ? adminResult.value : `error: ${adminResult.reason}`,
+    };
 
-    return NextResponse.json<ApiResponse<Submission>>({
+    console.log('[Submissions API] Email results:', emailStatus);
+
+    return NextResponse.json({
       success: true,
       data: submission,
+      _debug: {
+        emails: emailStatus,
+        env: {
+          RESEND_API_KEY: !!process.env.RESEND_API_KEY,
+          RESEND_FROM_EMAIL: process.env.RESEND_FROM_EMAIL || '(default)',
+          ADMIN_EMAIL: !!process.env.ADMIN_EMAIL,
+        },
+      },
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
