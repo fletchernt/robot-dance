@@ -170,6 +170,7 @@ export interface Submission {
   submitter_email: string;
   submitter_name?: string;
   status: SubmissionStatus;
+  published_at?: string;  // Set when published to Solutions table
   created_at: string;
 }
 

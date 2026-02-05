@@ -387,6 +387,10 @@ function getSubmissionsTable() {
 
 // Helper to convert Airtable record to Submission
 function recordToSubmission(record: Airtable.Record<Airtable.FieldSet>): Submission {
+  // Normalize status to lowercase for consistent handling
+  const rawStatus = (record.get('status') as string) || 'pending';
+  const status = rawStatus.toLowerCase() as Submission['status'];
+
   return {
     id: record.id,
     name: record.get('name') as string,
@@ -395,7 +399,8 @@ function recordToSubmission(record: Airtable.Record<Airtable.FieldSet>): Submiss
     category: record.get('category') as Submission['category'],
     submitter_email: record.get('submitter_email') as string,
     submitter_name: record.get('submitter_name') as string | undefined,
-    status: (record.get('status') as Submission['status']) || 'pending',
+    status,
+    published_at: record.get('published_at') as string | undefined,
     created_at: (record.get('created_at') || record.get('Created') || new Date().toISOString()) as string,
   };
 }
@@ -453,6 +458,71 @@ export async function getSubmissionByUrl(url: string): Promise<Submission | null
     console.error('[Submissions] getSubmissionByUrl failed:', error);
     // Don't block submission on lookup failure - just allow it through
     return null;
+  }
+}
+
+export async function getSubmissionById(id: string): Promise<Submission | null> {
+  try {
+    console.log('[Submissions] Fetching submission by ID:', id);
+    const record = await getSubmissionsTable().find(id);
+    return recordToSubmission(record);
+  } catch (error) {
+    console.error('[Submissions] getSubmissionById failed:', error);
+    return null;
+  }
+}
+
+export async function markSubmissionPublished(id: string): Promise<void> {
+  const publishedAt = new Date().toISOString();
+  console.log('[Submissions] Marking submission as published:', id);
+  await getSubmissionsTable().update(id, {
+    published_at: publishedAt,
+  });
+  console.log('[Submissions] Submission marked as published at:', publishedAt);
+}
+
+// ============ PUBLISH SUBMISSION TO SOLUTIONS ============
+
+function generateSlug(name: string): string {
+  return name
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '');
+}
+
+export async function createSolutionFromSubmission(submission: Submission): Promise<Solution> {
+  const slug = generateSlug(submission.name);
+
+  // Check if solution with this slug already exists
+  const existing = await getSolutionBySlug(slug);
+  if (existing) {
+    throw new Error(`Solution with slug "${slug}" already exists`);
+  }
+
+  console.log('[Solutions] Creating solution from submission:', {
+    name: submission.name,
+    slug,
+    category: submission.category,
+    website_url: submission.website_url,
+  });
+
+  const fields: Record<string, string | number> = {
+    name: submission.name,
+    slug,
+    description: submission.description,
+    category: submission.category,
+    website_url: submission.website_url,
+    rds_score: 0,
+    review_count: 0,
+  };
+
+  try {
+    const record = await getSolutionsTable().create(fields);
+    console.log('[Solutions] Solution created successfully:', record.id);
+    return recordToSolution(record);
+  } catch (error) {
+    console.error('[Solutions] Failed to create solution:', error);
+    throw error;
   }
 }
 
