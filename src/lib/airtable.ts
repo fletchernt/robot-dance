@@ -472,13 +472,20 @@ export async function getSubmissionById(id: string): Promise<Submission | null> 
   }
 }
 
-export async function markSubmissionPublished(id: string): Promise<void> {
+export async function markSubmissionPublished(id: string): Promise<boolean> {
   const publishedAt = new Date().toISOString();
   console.log('[Submissions] Marking submission as published:', id);
-  await getSubmissionsTable().update(id, {
-    published_at: publishedAt,
-  });
-  console.log('[Submissions] Submission marked as published at:', publishedAt);
+  try {
+    await getSubmissionsTable().update(id, {
+      published_at: publishedAt,
+    });
+    console.log('[Submissions] Submission marked as published at:', publishedAt);
+    return true;
+  } catch (error) {
+    // Field may not exist in Airtable - log warning but don't fail
+    console.warn('[Submissions] Could not set published_at (field may not exist):', error);
+    return false;
+  }
 }
 
 // ============ PUBLISH SUBMISSION TO SOLUTIONS ============

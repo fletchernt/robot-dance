@@ -39,7 +39,7 @@ export async function POST(request: NextRequest) {
       published_at: submission.published_at,
     });
 
-    // Check if already published
+    // Check if already published via published_at field (if it exists)
     if (submission.published_at) {
       console.log('[Publish API] Submission already published at:', submission.published_at);
       return NextResponse.json<ApiResponse<null>>(
@@ -62,15 +62,20 @@ export async function POST(request: NextRequest) {
     const solution = await createSolutionFromSubmission(submission);
     console.log('[Publish API] Solution created:', solution.id, solution.slug);
 
-    // Mark submission as published
-    await markSubmissionPublished(submission.id);
-    console.log('[Publish API] Submission marked as published');
+    // Mark submission as published (non-blocking - continues even if field doesn't exist)
+    const markedPublished = await markSubmissionPublished(submission.id);
+    if (markedPublished) {
+      console.log('[Publish API] Submission marked as published');
+    } else {
+      console.log('[Publish API] Could not mark submission as published (add published_at field to Airtable to enable)');
+    }
 
-    return NextResponse.json<ApiResponse<{ submission_id: string; solution: Solution }>>({
+    return NextResponse.json<ApiResponse<{ submission_id: string; solution: Solution; published_at_set: boolean }>>({
       success: true,
       data: {
         submission_id: submission.id,
         solution,
+        published_at_set: markedPublished,
       },
     });
   } catch (error) {
