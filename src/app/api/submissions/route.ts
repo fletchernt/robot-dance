@@ -102,13 +102,17 @@ export async function POST(request: NextRequest) {
     const submission = await createSubmission(body);
     console.log('[Submissions API] Submission created successfully:', submission.id);
 
-    // Send emails (non-blocking — don't fail the submission if emails fail)
-    sendSubmissionConfirmation(body.submitter_email.trim(), body.name.trim()).catch((err) => {
-      console.error('[Submissions API] Confirmation email failed:', err);
-    });
+    // Send emails and await results for logging (don't fail submission if emails fail)
+    console.log('[Submissions API] Sending emails...');
 
-    sendAdminSubmissionNotification(submission).catch((err) => {
-      console.error('[Submissions API] Admin notification email failed:', err);
+    const [confirmationResult, adminResult] = await Promise.allSettled([
+      sendSubmissionConfirmation(body.submitter_email.trim(), body.name.trim()),
+      sendAdminSubmissionNotification(submission),
+    ]);
+
+    console.log('[Submissions API] Email results:', {
+      confirmation: confirmationResult.status === 'fulfilled' ? confirmationResult.value : confirmationResult.reason,
+      admin: adminResult.status === 'fulfilled' ? adminResult.value : adminResult.reason,
     });
 
     return NextResponse.json<ApiResponse<Submission>>({

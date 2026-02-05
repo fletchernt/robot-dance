@@ -1,6 +1,17 @@
 import { Resend } from 'resend';
 import type { Submission } from '@/types';
 
+// Log env var presence on module load (booleans only, no secrets)
+function logEmailConfig() {
+  console.log('[Email] Configuration check:', {
+    RESEND_API_KEY: !!process.env.RESEND_API_KEY,
+    RESEND_FROM_EMAIL: process.env.RESEND_FROM_EMAIL || '(using default)',
+    ADMIN_EMAIL: !!process.env.ADMIN_EMAIL,
+    AIRTABLE_BASE_ID: !!process.env.AIRTABLE_BASE_ID,
+    AIRTABLE_SUBMISSIONS_TABLE_ID: !!process.env.AIRTABLE_SUBMISSIONS_TABLE_ID,
+  });
+}
+
 function getResendClient(): Resend | null {
   const apiKey = process.env.RESEND_API_KEY;
   if (!apiKey) {
@@ -19,11 +30,15 @@ export async function sendSubmissionConfirmation(
   to: string,
   toolName: string
 ): Promise<boolean> {
+  logEmailConfig();
+
   const resend = getResendClient();
   if (!resend) return false;
 
+  console.log('[Email] Sending confirmation email:', { to, toolName, from: FROM_ADDRESS });
+
   try {
-    await resend.emails.send({
+    const result = await resend.emails.send({
       from: FROM_ADDRESS,
       to,
       subject: `We received your submission: ${toolName}`,
@@ -36,10 +51,14 @@ export async function sendSubmissionConfirmation(
         </div>
       `,
     });
-    console.log('[Email] Confirmation sent to:', to);
-    return true;
+    console.log('[Email] Confirmation sent successfully:', { to, resendId: result.data?.id, error: result.error });
+    return !result.error;
   } catch (error) {
-    console.error('[Email] Failed to send confirmation:', error);
+    console.error('[Email] Failed to send confirmation:', {
+      to,
+      error: error instanceof Error ? error.message : error,
+      stack: error instanceof Error ? error.stack : undefined,
+    });
     return false;
   }
 }
@@ -47,6 +66,8 @@ export async function sendSubmissionConfirmation(
 export async function sendAdminSubmissionNotification(
   submission: Submission
 ): Promise<boolean> {
+  logEmailConfig();
+
   const resend = getResendClient();
   if (!resend) return false;
 
@@ -54,6 +75,13 @@ export async function sendAdminSubmissionNotification(
     console.warn('[Email] ADMIN_EMAIL not configured — skipping admin notification');
     return false;
   }
+
+  console.log('[Email] Sending admin notification:', {
+    submissionId: submission.id,
+    submissionName: submission.name,
+    to: ADMIN_EMAIL,
+    from: FROM_ADDRESS,
+  });
 
   const airtableUrl = AIRTABLE_BASE_ID && AIRTABLE_SUBMISSIONS_TABLE_ID
     ? `https://airtable.com/${AIRTABLE_BASE_ID}/${AIRTABLE_SUBMISSIONS_TABLE_ID}/${submission.id}`
@@ -68,7 +96,7 @@ export async function sendAdminSubmissionNotification(
   };
 
   try {
-    await resend.emails.send({
+    const result = await resend.emails.send({
       from: FROM_ADDRESS,
       to: ADMIN_EMAIL,
       subject: `New submission: ${submission.name}`,
@@ -111,10 +139,28 @@ export async function sendAdminSubmissionNotification(
         </div>
       `,
     });
-    console.log('[Email] Admin notification sent for submission:', submission.id);
+
+    if (result.error) {
+      console.error('[Email] Resend API returned error:', {
+        submissionId: submission.id,
+        error: result.error,
+      });
+      return false;
+    }
+
+    console.log('[Email] Admin notification sent successfully:', {
+      submissionId: submission.id,
+      resendId: result.data?.id,
+    });
     return true;
   } catch (error) {
-    console.error('[Email] Failed to send admin notification:', error);
+    console.error('[Email] Failed to send admin notification:', {
+      submissionId: submission.id,
+      to: ADMIN_EMAIL,
+      from: FROM_ADDRESS,
+      error: error instanceof Error ? error.message : error,
+      stack: error instanceof Error ? error.stack : undefined,
+    });
     return false;
   }
 }
